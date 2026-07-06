@@ -13,7 +13,7 @@ echo "🎬 Restreaming: $HLS_URL"
 while true; do
     ffmpeg -re -timeout 30000000 -i "$HLS_URL" \
         -af "volume=1.08" \
-        -c:v libx264 -preset ultrafast -crf 28 -g 50 \
+        -c:v copy -bsf:v h264_mp4toannexb \
         -c:a aac -b:a 96k -ar 44100 \
         -metadata title="S24W Live" -metadata encoder="S24W" \
         -f flv "$FB_URL" \
