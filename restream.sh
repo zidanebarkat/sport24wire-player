@@ -12,28 +12,28 @@ if [ -z "$FACEBOOK_KEY" ]; then
     exit 1
 fi
 
-FB_URL="rtmps://live-api-s.facebook.com:443/rtmp/$FACEBOOK_KEY"
+FB_URL="rtmp://live-api-s.facebook.com:80/rtmp/$FACEBOOK_KEY"
 
 echo "🎬 Restreaming: $HLS_URL"
-echo "   → Facebook: rtmps://live-api-s.facebook.com:443/rtmp/***"
+echo "   → Facebook: rtmp://live-api-s.facebook.com:80/rtmp/***"
 
 while true; do
     if [ -n "$TIKTOK_KEY" ]; then
         TT_URL="rtmps://push-pub-rtmp-tt.livepush.com/live/$TIKTOK_KEY"
         echo "   → TikTok: live"
-        ffmpeg -re -i "$HLS_URL" \
+        ffmpeg -re -timeout 30000000 -i "$HLS_URL" \
             -c:v libx264 -preset veryfast -b:v 2500k -maxrate 2500k -bufsize 5000k \
             -c:a aac -b:a 128k -ar 44100 \
             -f flv "$FB_URL" \
             -c:v copy -c:a copy \
             -f flv "$TT_URL" \
-            -loglevel error
+            -loglevel warning -stats
     else
-        ffmpeg -re -i "$HLS_URL" \
+        ffmpeg -re -timeout 30000000 -i "$HLS_URL" \
             -c:v libx264 -preset veryfast -b:v 2500k -maxrate 2500k -bufsize 5000k \
             -c:a aac -b:a 128k -ar 44100 \
             -f flv "$FB_URL" \
-            -loglevel error
+            -loglevel warning -stats
     fi
 
     echo "⚠️  Stream ended, retrying in 10s..."
