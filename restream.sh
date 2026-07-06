@@ -10,8 +10,6 @@ fi
 
 FB_SERVER="rtmps://live-api-s.facebook.com:443/rtmp"
 FB_URL="$FB_SERVER/$FACEBOOK_KEY"
-TIMESTAMP=$(date +%s)
-
 echo "🎬 Restreaming: $HLS_URL"
 echo "   → Facebook: $FB_SERVER/***"
 
@@ -20,7 +18,7 @@ while true; do
         TT_URL="rtmps://push-pub-rtmp-tt.livepush.com/live/$TIKTOK_KEY"
         echo "   → TikTok: live"
         ffmpeg -re -timeout 30000000 -i "$HLS_URL" \
-            -vf "drawtext=text='S24W':x=10:y=10:fontsize=14:fontcolor=white@0.4:box=1:boxcolor=black@0.2:font='Sans',eq=contrast=1.05:brightness=0.02" \
+            -vf "drawtext=text='S24W':x=10:y=10:fontsize=14:fontcolor=white@0.4:box=1:boxcolor=black@0.2:font='Sans'" \
             -af "volume=1.08" \
             -c:v libx264 -preset ultrafast -b:v 1500k -maxrate 1500k -bufsize 3000k \
             -c:a aac -b:a 96k -ar 44100 \
@@ -31,7 +29,7 @@ while true; do
             -loglevel warning -stats
     else
         ffmpeg -re -timeout 30000000 -i "$HLS_URL" \
-            -vf "drawtext=text='S24W':x=10:y=10:fontsize=14:fontcolor=white@0.4:box=1:boxcolor=black@0.2:font='Sans',eq=contrast=1.05:brightness=0.02" \
+            -vf "drawtext=text='S24W':x=10:y=10:fontsize=14:fontcolor=white@0.4:box=1:boxcolor=black@0.2:font='Sans'" \
             -af "volume=1.08" \
             -c:v libx264 -preset ultrafast -b:v 1500k -maxrate 1500k -bufsize 3000k \
             -c:a aac -b:a 96k -ar 44100 \
