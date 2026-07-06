@@ -1,17 +1,36 @@
-app = "sport24wire-restream"
+# fly.toml app configuration file generated for sport24wire-restream on 2026-07-06T20:32:41+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'sport24wire-restream'
+primary_region = 'sin'
+
+[build]
 
 [env]
-  HLS_URL = "https://cu.ebda3io.store/nppsf3.m3u8"
+  HLS_URL = 'https://cu.ebda3io.store/nppsf3.m3u8'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
 
 [[services]]
+  protocol = 'tcp'
   internal_port = 8080
-  protocol = "tcp"
+  ports = []
+
   [services.concurrency]
-    type = "connections"
+    type = 'connections'
     hard_limit = 25
     soft_limit = 20
 
 [[vm]]
-  memory = "256mb"
-  cpu_kind = "shared"
+  memory = '256mb'
+  cpu_kind = 'shared'
   cpus = 1
+  memory_mb = 256
