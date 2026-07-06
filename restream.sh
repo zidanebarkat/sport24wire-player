@@ -12,10 +12,10 @@ if [ -z "$FACEBOOK_KEY" ]; then
     exit 1
 fi
 
-FB_URL="rtmp://live-api-s.facebook.com:80/rtmp/$FACEBOOK_KEY"
+FB_URL="rtmps://live-api-s.facebook.com:443/rtmp/$FACEBOOK_KEY"
 
 echo "🎬 Restreaming: $HLS_URL"
-echo "   → Facebook: rtmp://live-api-s.facebook.com:80/rtmp/***"
+echo "   → Facebook: rtmps://live-api-s.facebook.com:443/rtmp/***"
 
 while true; do
     if [ -n "$TIKTOK_KEY" ]; then
