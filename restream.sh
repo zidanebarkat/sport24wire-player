@@ -3,7 +3,7 @@
 # Usage: ./restream.sh <hls_url>
 # Get RTMP keys from: facebook.com/live/producer and tiktok.com/live
 
-HLS_URL="${1:-https://cu.ebda3io.store/nppsf3.m3u8}"
+HLS_URL="${1:-https://s3.us-east-2.amazonaws.com/cdd200/live/stream/index.m3u8}"
 FACEBOOK_KEY="${FB_KEY:-}"
 TIKTOK_KEY="${TT_KEY:-}"
 
