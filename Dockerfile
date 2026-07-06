@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-RUN apk add --no-cache ffmpeg bash curl
+RUN apk add --no-cache ffmpeg bash curl font-noto fontconfig
 
 COPY restream.sh /restream.sh
 RUN chmod +x /restream.sh
