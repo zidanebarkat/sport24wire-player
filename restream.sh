@@ -11,11 +11,16 @@ FB_URL="rtmps://live-api-s.facebook.com:443/rtmp/$FACEBOOK_KEY"
 echo "🎬 Restreaming: $HLS_URL"
 
 while true; do
-    ffmpeg -re -timeout 30000000 -i "$HLS_URL" \
+    ffmpeg \
+        -timeout 30000000 \
+        -reconnect 1 \
+        -reconnect_streamed 1 \
+        -reconnect_delay_max 5 \
+        -i "$HLS_URL" \
         -af "volume=1.08" \
         -c:v copy -bsf:v h264_mp4toannexb \
         -c:a aac -b:a 96k -ar 44100 \
-        -metadata title="S24W Live" -metadata encoder="S24W" \
+        -metadata title="S24W Live" \
         -f flv "$FB_URL" \
         -loglevel warning -stats
 
