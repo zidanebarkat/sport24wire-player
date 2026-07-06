@@ -7,7 +7,7 @@ if [ -z "$FACEBOOK_KEY" ]; then
     exit 1
 fi
 
-FB_URL="rtmps://live-api-s.facebook.com:443/rtmp/$FACEBOOK_KEY"
+FB_URL="rtmp://live-api-s.facebook.com:80/rtmp/$FACEBOOK_KEY"
 echo "🎬 Restreaming: $HLS_URL"
 
 while true; do
@@ -16,6 +16,8 @@ while true; do
         -reconnect 1 \
         -reconnect_streamed 1 \
         -reconnect_delay_max 5 \
+        -max_reload 3 \
+        -live_start_index -3 \
         -i "$HLS_URL" \
         -af "volume=1.08" \
         -c:v copy -bsf:v h264_mp4toannexb \
