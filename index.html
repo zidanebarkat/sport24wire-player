@@ -2,260 +2,76 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sport24Wire - Live Player</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>beIN MAX 1 (AR) - Live</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body {
-            width: 100%; height: 100%;
-            background: #000;
-            overflow: hidden;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-        .player-container {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            z-index: 1;
-        }
-        video {
-            width: 100%; height: 100%;
-            object-fit: contain;
-            background: #000;
-        }
-        iframe#embedPlayer {
-            width: 100%; height: 100%;
-            border: none;
-            display: none;
-            background: #000;
-        }
+        html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: contain; background: #000; }
         .controls {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
+            position: fixed; bottom: 0; left: 0; right: 0;
             padding: 20px 24px;
             background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
+            z-index: 10; display: flex; align-items: center; gap: 16px;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
         }
-        .player-container:hover .controls,
-        .controls.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        video:hover + .controls, .controls:hover { opacity: 1; pointer-events: auto; }
         .controls button {
-            background: rgba(255,255,255,0.15);
-            border: none;
-            color: #fff;
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-            backdrop-filter: blur(4px);
+            background: rgba(255,255,255,0.15); border: none; color: #fff;
+            width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
+            font-size: 18px; transition: background 0.2s;
         }
         .controls button:hover { background: rgba(255,255,255,0.3); }
         .controls .progress {
-            flex: 1;
-            height: 4px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 2px;
-            cursor: pointer;
-            position: relative;
+            flex: 1; height: 4px; background: rgba(255,255,255,0.2);
+            border-radius: 2px; cursor: pointer; position: relative;
         }
-        .controls .progress .bar {
-            height: 100%;
-            background: #e63946;
-            border-radius: 2px;
-            width: 0%;
-        }
-        .controls .time {
-            color: rgba(255,255,255,0.7);
-            font-size: 13px;
-            font-weight: 500;
-            min-width: 90px;
-            text-align: center;
-            font-variant-numeric: tabular-nums;
-        }
-        .controls .type-badge {
-            font-size: 10px;
-            background: rgba(255,255,255,0.12);
-            padding: 3px 8px;
-            border-radius: 4px;
-            color: rgba(255,255,255,0.6);
-        }
-        .channel-bar {
-            position: fixed;
-            top: 0; left: 0; right: 0;
+        .controls .progress .bar { height: 100%; background: #e63946; border-radius: 2px; width: 0%; }
+        .controls .time { color: rgba(255,255,255,0.7); font-size: 13px; min-width: 90px; text-align: center; font-variant-numeric: tabular-nums; }
+        .top-bar {
+            position: fixed; top: 0; left: 0; right: 0;
             padding: 12px 20px;
             background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, transparent 100%);
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
+            z-index: 10; display: flex; align-items: center;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
         }
-        .player-container:hover .channel-bar,
-        .channel-bar.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .channel-bar .logo {
-            color: #fff;
-            font-weight: 800;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .channel-bar .logo span { color: #e63946; }
-        .channel-bar .match-info {
-            color: rgba(255,255,255,0.7);
-            font-size: 13px;
-            margin-left: auto;
-            text-align: right;
-        }
-        .channel-bar .match-info strong {
-            color: #fff;
-            display: block;
-            font-size: 15px;
-        }
+        video:hover ~ .top-bar, .top-bar:hover { opacity: 1; pointer-events: auto; }
+        .top-bar .logo { color: #fff; font-weight: 800; font-size: 14px; }
+        .top-bar .logo span { color: #e63946; }
+        .top-bar .info { margin-left: auto; color: rgba(255,255,255,0.7); font-size: 12px; text-align: right; }
+        .top-bar .info strong { color: #fff; display: block; font-size: 14px; }
         .loading {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 5;
-            text-align: center;
-            color: rgba(255,255,255,0.6);
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 5; text-align: center; color: rgba(255,255,255,0.6);
         }
         .loading .spinner {
             width: 48px; height: 48px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top-color: #e63946;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 16px;
+            border: 3px solid rgba(255,255,255,0.1); border-top-color: #e63946;
+            border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading p { font-size: 14px; font-weight: 500; }
-        .error {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 5;
-            text-align: center;
-            color: rgba(255,255,255,0.8);
-            display: none;
-        }
-        .error p { font-size: 14px; margin-bottom: 16px; }
-        .error button {
-            background: #e63946;
-            color: #fff;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .ch-list {
-            display: none;
-            position: fixed;
-            bottom: 80px;
-            left: 20px;
-            right: 20px;
-            max-height: 55vh;
-            overflow-y: auto;
-            background: rgba(20,20,30,0.96);
-            backdrop-filter: blur(12px);
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.08);
-            padding: 8px;
-            z-index: 20;
-        }
-        .ch-list.open { display: block; }
-        .ch-list .ch-group-label {
-            color: rgba(255,255,255,0.35);
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 8px 14px 4px;
-        }
-        .ch-list button {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            padding: 12px 14px;
-            background: transparent;
-            border: none;
-            color: rgba(255,255,255,0.8);
-            text-align: left;
-            font-size: 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.15s;
-            gap: 8px;
-        }
-        .ch-list button:hover { background: rgba(230,57,70,0.2); color: #fff; }
-        .ch-list button.active { background: rgba(230,57,70,0.3); color: #fff; font-weight: 600; }
-        .ch-list .ch-type {
-            font-size: 9px;
-            background: rgba(255,255,255,0.08);
-            padding: 2px 6px;
-            border-radius: 3px;
-            margin-left: auto;
-            flex-shrink: 0;
-        }
-        .ch-list .ch-type.direct { background: rgba(70,200,100,0.2); color: #6c6; }
-        .ch-list .ch-type.embed { background: rgba(100,150,255,0.2); color: #68f; }
+        .loading p { font-size: 14px; }
         @media (max-width: 600px) {
             .controls { padding: 14px 16px; gap: 10px; }
             .controls button { width: 36px; height: 36px; font-size: 15px; }
-            .channel-bar { padding: 10px 14px; }
-            .channel-bar .logo { font-size: 14px; }
-            .channel-bar .match-info { font-size: 11px; }
-            .channel-bar .match-info strong { font-size: 13px; }
-            .controls .time { font-size: 11px; min-width: 70px; }
         }
     </style>
 </head>
 <body>
 
-<div class="player-container" id="playerContainer">
-    <video id="video" playsinline autoplay></video>
-    <iframe id="embedPlayer" sandbox="allow-same-origin allow-scripts allow-forms allow-modals allow-popups allow-orientation-lock allow-pointer-lock allow-presentation allow-top-navigation-by-user-activation" allow="autoplay; fullscreen; encrypted-media"></iframe>
+<video id="video" playsinline autoplay></video>
 
-    <div class="channel-bar" id="channelBar">
-        <div class="logo">Sport<span>24</span>Wire</div>
-        <div class="match-info" id="matchInfo">
-            <strong id="matchTitle">Portugal vs Spain</strong>
-            <span id="matchLeague">World Cup</span>
-        </div>
-    </div>
+<div class="top-bar">
+    <div class="logo">Sport<span>24</span>Wire</div>
+    <div class="info"><strong>beIN MAX 1 (AR)</strong>World Cup - Portugal vs Spain</div>
+</div>
 
-    <div class="controls" id="controls">
-        <button id="playBtn" title="Play/Pause">▶</button>
-        <div class="progress" id="progress">
-            <div class="bar" id="progressBar"></div>
-        </div>
-        <span class="time" id="timeDisplay">0:00 / 0:00</span>
-        <span class="type-badge" id="typeBadge">HLS</span>
-        <button id="chListBtn" title="Channels">☰</button>
-        <button class="fs-btn" id="fsBtn" title="Fullscreen">⛶</button>
-    </div>
-
-    <div class="ch-list" id="chList"></div>
+<div class="controls">
+    <button id="playBtn">▶</button>
+    <div class="progress"><div class="bar" id="progressBar"></div></div>
+    <span class="time" id="timeDisplay">0:00 / 0:00</span>
+    <button id="fsBtn">⛶</button>
 </div>
 
 <div class="loading" id="loading">
@@ -263,240 +79,58 @@
     <p>Loading stream...</p>
 </div>
 
-<div class="error" id="error">
-    <p>⚠️ Stream unavailable</p>
-    <button onclick="location.reload()">Retry</button>
-</div>
-
 <script>
-const MATCH_ID = '30713';
-const API_URL = 'https://ws.kora-api.space/api/matche/' + MATCH_ID + '/ar';
-const FALLBACK_URL = 'https://cu.ebda3io.store/nppsf3.m3u8';
-
 const video = document.getElementById('video');
-const embed = document.getElementById('embedPlayer');
 const playBtn = document.getElementById('playBtn');
-const progress = document.getElementById('progress');
 const progressBar = document.getElementById('progressBar');
 const timeDisplay = document.getElementById('timeDisplay');
-const typeBadge = document.getElementById('typeBadge');
 const fsBtn = document.getElementById('fsBtn');
-const chList = document.getElementById('chList');
-const chListBtn = document.getElementById('chListBtn');
 const loading = document.getElementById('loading');
-const error = document.getElementById('error');
-const matchTitle = document.getElementById('matchTitle');
-const matchLeague = document.getElementById('matchLeague');
-const container = document.getElementById('playerContainer');
-
+const URL = 'https://cu.ebda3io.store/nppsf3.m3u8';
 let hls = null;
-let matchData = null;
-let currentMode = 'hls';
 
-function getMinute() {
-    const d = new Date();
-    const pad = n => String(n).padStart(2, '0');
-    return `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}`;
-}
-
-async function fetchMatch() {
-    try {
-        const res = await fetch(API_URL + '?t=' + getMinute());
-        matchData = await res.json();
-        if (matchData.active == 1 && matchData.has_channels) {
-            matchTitle.textContent = (matchData.home_en || matchData.home) + ' vs ' + (matchData.away_en || matchData.away);
-            matchLeague.textContent = matchData.league_en || matchData.league;
-            renderChannels(matchData.channels || []);
-        } else {
-            matchTitle.textContent = 'Portugal vs Spain';
-            matchLeague.textContent = 'World Cup';
-        }
-    } catch (e) {
-        console.warn('Match API failed, using fallback');
-        matchTitle.textContent = 'Portugal vs Spain';
-        matchLeague.textContent = 'World Cup';
-    }
-    renderFallbackChannels();
-    loadMainHLS();
-}
-
-function renderFallbackChannels() {
-    const fallbackBtn = document.createElement('button');
-    fallbackBtn.className = 'active';
-    fallbackBtn.dataset.mode = 'hls';
-    fallbackBtn.dataset.url = FALLBACK_URL;
-    fallbackBtn.innerHTML = `<span>🇸🇦 beIN MAX 1 (AR) - Live</span><span class="ch-type direct">HLS</span>`;
-    fallbackBtn.onclick = () => { chList.classList.remove('open'); switchToHLS(FALLBACK_URL); };
-    chList.prepend(fallbackBtn);
-}
-
-function renderChannels(channels) {
-    if (!channels.length) return;
-
-    const label = document.createElement('div');
-    label.className = 'ch-group-label';
-    label.textContent = '— Match Channels —';
-    chList.appendChild(label);
-
-    channels.forEach((ch, idx) => {
-        const btn = document.createElement('button');
-        const lang = ch.language === 'Ar' ? '🇸🇦' : ch.language === 'Fr' ? '🇫🇷' : ch.language === 'Es' ? '🇪🇸' : ch.language === 'It' ? '🇮🇹' : ch.language === 'Pt' ? '🇵🇹' : ch.language === 'De' ? '🇩🇪' : ch.language === 'Nl' ? '🇳🇱' : '🇬🇧';
-        const name = ch.server_name_en || ch.server_name;
-        const url = ch.mobile_link || ch.link;
-
-        if (url && url.includes('.m3u8')) {
-            btn.innerHTML = `<span>${lang} ${name}</span><span class="ch-type direct">HLS</span>`;
-            btn.onclick = () => { chList.classList.remove('open'); switchToHLS(url); };
-        } else if (ch.edge == 0 && ch.mobile_link) {
-            btn.innerHTML = `<span>${lang} ${name}</span><span class="ch-type embed">EMBED</span>`;
-            btn.onclick = () => { chList.classList.remove('open'); switchToEmbed(ch.link); };
-        } else if (ch.link && ch.link.includes('reddit-soccer-streams')) {
-            btn.innerHTML = `<span>${lang} ${name}</span><span class="ch-type embed">EMBED</span>`;
-            btn.onclick = () => { chList.classList.remove('open'); switchToEmbed(ch.link); };
-        } else {
-            btn.innerHTML = `<span>${lang} ${name}</span><span class="ch-type embed">WEB</span>`;
-            btn.onclick = () => { chList.classList.remove('open'); switchToEmbed(url); };
-        }
-
-        btn.dataset.mode = 'embed';
-        chList.appendChild(btn);
+if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = URL;
+    video.addEventListener('loadedmetadata', () => loading.style.display = 'none');
+} else if (Hls.isSupported()) {
+    hls = new Hls({ enableWorker: true });
+    hls.loadSource(URL);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        loading.style.display = 'none';
+        video.play().catch(() => {});
     });
-}
-
-function switchToHLS(url) {
-    currentMode = 'hls';
-    video.style.display = 'block';
-    embed.style.display = 'none';
-    typeBadge.textContent = 'HLS';
-    document.querySelectorAll('.ch-list button').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.ch-list button').forEach(b => {
-        if (b.dataset.url === url || b.innerHTML.includes('FIFA+')) b.classList.add('active');
+    hls.on(Hls.Events.ERROR, (e, data) => {
+        if (data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
     });
-    loadHls(url);
+} else {
+    loading.innerHTML = '<p>HLS not supported</p>';
 }
 
-function switchToEmbed(url) {
-    currentMode = 'embed';
-    destroyHls();
-    video.style.display = 'none';
-    embed.style.display = 'block';
-    typeBadge.textContent = 'EMBED';
-    loading.style.display = 'block';
-    error.style.display = 'none';
-    document.querySelectorAll('.ch-list button').forEach(b => b.classList.remove('active'));
-
-    embed.src = url;
-    embed.onload = () => { loading.style.display = 'none'; };
-    embed.onerror = () => showError('Embed failed to load');
-    setTimeout(() => { if (loading.style.display !== 'none') loading.style.display = 'none'; }, 8000);
-}
-
-function loadMainHLS() {
-    loadHls(FALLBACK_URL);
-}
-
-function loadHls(url) {
-    destroyHls();
-    loading.style.display = 'block';
-    error.style.display = 'none';
-
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-        video.addEventListener('loadedmetadata', () => { loading.style.display = 'none'; });
-        video.addEventListener('error', () => { loading.style.display = 'none'; });
-    } else if (Hls.isSupported()) {
-        hls = new Hls({ enableWorker: true });
-        hls.loadSource(url);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            loading.style.display = 'none';
-            video.play().catch(() => {});
-        });
-        hls.on(Hls.Events.ERROR, (e, data) => {
-            if (data.fatal) {
-                if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                    console.warn('Network error, trying recovery...');
-                    hls.startLoad();
-                } else {
-                    showError('Stream error');
-                }
-            }
-        });
-    } else {
-        showError('HLS not supported by this browser');
-    }
-}
-
-function destroyHls() {
-    if (hls) { hls.destroy(); hls = null; }
-    video.removeAttribute('src');
-    video.load();
-}
-
-function showError(msg) {
-    loading.style.display = 'none';
-    error.style.display = 'block';
-    error.querySelector('p').textContent = '⚠️ ' + (msg || 'Stream unavailable');
-}
-
-// Controls
 playBtn.addEventListener('click', () => {
-    if (currentMode === 'hls') {
-        if (video.paused) { video.play(); playBtn.textContent = '⏸'; }
-        else { video.pause(); playBtn.textContent = '▶'; }
-    }
+    if (video.paused) { video.play(); playBtn.textContent = '⏸'; }
+    else { video.pause(); playBtn.textContent = '▶'; }
 });
-
 video.addEventListener('play', () => { playBtn.textContent = '⏸'; });
 video.addEventListener('pause', () => { playBtn.textContent = '▶'; });
-
 video.addEventListener('timeupdate', () => {
     if (video.duration) {
         progressBar.style.width = ((video.currentTime / video.duration) * 100) + '%';
         timeDisplay.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
     }
 });
-
-progress.addEventListener('click', (e) => {
-    if (currentMode !== 'hls') return;
-    const rect = progress.getBoundingClientRect();
+document.querySelector('.progress').addEventListener('click', (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
     video.currentTime = ((e.clientX - rect.left) / rect.width) * video.duration;
 });
-
 function formatTime(t) {
     if (!t || isNaN(t)) return '0:00';
-    const m = Math.floor(t / 60);
-    const s = Math.floor(t % 60);
-    return m + ':' + (s < 10 ? '0' : '') + s;
+    return Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 }
-
 fsBtn.addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-        container.requestFullscreen().catch(() => {});
-    } else {
-        document.exitFullscreen();
-    }
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
 });
-
-chListBtn.addEventListener('click', () => chList.classList.toggle('open'));
-document.addEventListener('click', (e) => {
-    if (!chList.contains(e.target) && e.target !== chListBtn) chList.classList.remove('open');
-});
-
-let hideTimeout;
-container.addEventListener('mousemove', () => {
-    document.getElementById('controls').classList.add('visible');
-    document.getElementById('channelBar').classList.add('visible');
-    clearTimeout(hideTimeout);
-    hideTimeout = setTimeout(() => {
-        if (!video.paused) {
-            document.getElementById('controls').classList.remove('visible');
-            document.getElementById('channelBar').classList.remove('visible');
-        }
-    }, 3000);
-});
-
-fetchMatch();
 </script>
 </body>
 </html>
