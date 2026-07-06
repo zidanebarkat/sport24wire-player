@@ -9,13 +9,12 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;background:#000;overflow:hidden}
 video{width:100%;height:100%;object-fit:contain;background:#000}
-#overlay{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:#000;color:#fff;font-family:sans-serif;font-size:14px;transition:opacity .5s;cursor:pointer}
+#overlay{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:#000;color:#fff;font-family:sans-serif;font-size:14px;transition:opacity .5s}
 #overlay.hidden{opacity:0;pointer-events:none}
 #overlay .spinner{width:48px;height:48px;border:3px solid rgba(255,255,255,.1);border-top-color:#e63946;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-#overlay .btn{background:#e63946;border:none;color:#fff;padding:12px 32px;border-radius:6px;font-size:16px;cursor:pointer}
-#overlay .btn:hover{background:#c1121f}
-#overlay .err{color:#ff6b6b;font-size:13px;max-width:300px;text-align:center}
+#unmuteBtn{position:fixed;bottom:80px;right:20px;z-index:20;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.3);color:#fff;width:48px;height:48px;border-radius:50%;font-size:20px;cursor:pointer;display:none}
+#unmuteBtn:hover{background:rgba(255,255,255,.2)}
 .controls{position:fixed;bottom:0;left:0;right:0;padding:20px 24px;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,transparent 100%);z-index:5;display:flex;align-items:center;gap:16px;opacity:0;transition:opacity .3s;pointer-events:none}
 .vid:hover~.controls,.controls:hover{opacity:1;pointer-events:auto}
 .controls button{background:rgba(255,255,255,.15);border:none;color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:18px}
@@ -34,7 +33,7 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 </head>
 <body>
 
-<video id="video" class="vid" playsinline muted></video>
+<video id="video" class="vid" playsinline autoplay muted></video>
 
 <div class="top-bar">
   <div class="logo">Sport<span>24</span>Wire</div>
@@ -42,90 +41,69 @@ video{width:100%;height:100%;object-fit:contain;background:#000}
 </div>
 
 <div class="controls">
-  <button id="playBtn">▶</button>
+  <button id="playBtn">⏸</button>
   <div class="bar-wrap"><div class="fill" id="progressBar"></div></div>
   <span class="time" id="timeDisplay">0:00 / 0:00</span>
   <button id="fsBtn">⛶</button>
 </div>
 
-<div id="overlay">
-  <div class="spinner" id="spinner"></div>
-  <div id="msg">Loading stream...</div>
-  <button class="btn" id="retryBtn" style="display:none">Retry</button>
-  <div class="err" id="errMsg"></div>
-</div>
+<button id="unmuteBtn">🔇</button>
+
+<div id="overlay"><div class="spinner"></div><div id="msg">Loading stream...</div></div>
 
 <script>
 const video=document.getElementById('video');
 const overlay=document.getElementById('overlay');
-const spinner=document.getElementById('spinner');
 const msg=document.getElementById('msg');
-const retryBtn=document.getElementById('retryBtn');
-const errMsg=document.getElementById('errMsg');
 const playBtn=document.getElementById('playBtn');
 const progressBar=document.getElementById('progressBar');
 const timeDisplay=document.getElementById('timeDisplay');
 const fsBtn=document.getElementById('fsBtn');
+const unmuteBtn=document.getElementById('unmuteBtn');
 const URL='https://2.simokora.com/my-hls/h9asfma10d5.m3u8';
 
 let hls=null;
 
-function showOverlay(text,isError=false){
-  overlay.classList.remove('hidden');
-  msg.textContent=text;
-  spinner.style.display=isError?'none':'block';
-  retryBtn.style.display=isError?'block':'none';
-  if(isError)errMsg.textContent='Check console for details (F12)';
-  else errMsg.textContent='';
-}
-
+function showOverlay(t){overlay.classList.remove('hidden');msg.textContent=t}
 function hideOverlay(){overlay.classList.add('hidden')}
+function formatTime(t){if(!t||isNaN(t))return'0:00';return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')}
 
-function togglePlay(){
-  if(video.paused){video.play().catch(()=>{})}
-  else{video.pause()}
-}
-
-function formatTime(t){
-  if(!t||isNaN(t))return'0:00';
-  return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
-}
-
-function initPlayer(){
-  showOverlay('Loading stream...');
-  
-  if(Hls.isSupported()){
-    hls=new Hls({enableWorker:false});
-    hls.loadSource(URL);
-    hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED,()=>{
-      hideOverlay();
+if(Hls.isSupported()){
+  hls=new Hls({enableWorker:false});
+  hls.loadSource(URL);
+  hls.attachMedia(video);
+  hls.on(Hls.Events.MANIFEST_PARSED,()=>{
+    hideOverlay();
+    setTimeout(()=>{
+      video.muted=false;
       video.play().catch(()=>{
-        showOverlay('Tap to play');
+        video.muted=true;
+        unmuteBtn.style.display='block';
       });
-    });
-    hls.on(Hls.Events.ERROR,(e,data)=>{
-      if(data.fatal){
-        showOverlay('Stream error - retrying...',true);
-        if(data.type===Hls.ErrorTypes.NETWORK_ERROR){
-          setTimeout(()=>hls.startLoad(),2000);
-        }else{
-          setTimeout(()=>window.location.reload(),5000);
-        }
+    },500);
+  });
+  hls.on(Hls.Events.ERROR,(e,data)=>{
+    if(data.fatal){
+      showOverlay('Reconnecting...');
+      if(data.type===Hls.ErrorTypes.NETWORK_ERROR){
+        setTimeout(()=>hls.startLoad(),2000);
+      }else{
+        setTimeout(()=>window.location.reload(),5000);
       }
-    });
-  }else{
-    showOverlay('HLS not supported in this browser',true);
-  }
+    }
+  });
+}else{
+  msg.textContent='HLS not supported';
 }
 
-overlay.addEventListener('click',()=>{
-  if(!overlay.classList.contains('hidden')){
-    video.play().then(hideOverlay).catch(()=>{});
-  }
+unmuteBtn.addEventListener('click',()=>{
+  video.muted=false;
+  video.play().then(()=>unmuteBtn.style.display='none').catch(()=>{});
 });
 
-playBtn.addEventListener('click',togglePlay);
+playBtn.addEventListener('click',()=>{
+  if(video.paused){video.play()}else{video.pause()}
+});
 video.addEventListener('play',()=>{playBtn.textContent='⏸'});
 video.addEventListener('pause',()=>{playBtn.textContent='▶'});
 video.addEventListener('timeupdate',()=>{
@@ -142,9 +120,6 @@ fsBtn.addEventListener('click',()=>{
   if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});
   else document.exitFullscreen();
 });
-retryBtn.addEventListener('click',()=>window.location.reload());
-
-initPlayer();
 </script>
 </body>
 </html>
