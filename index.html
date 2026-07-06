@@ -1,136 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>beIN MAX 1 (AR) - Live</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
-        video { width: 100%; height: 100%; object-fit: contain; background: #000; }
-        .controls {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            padding: 20px 24px;
-            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
-            z-index: 10; display: flex; align-items: center; gap: 16px;
-            opacity: 0; transition: opacity 0.3s; pointer-events: none;
-        }
-        video:hover + .controls, .controls:hover { opacity: 1; pointer-events: auto; }
-        .controls button {
-            background: rgba(255,255,255,0.15); border: none; color: #fff;
-            width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
-            font-size: 18px; transition: background 0.2s;
-        }
-        .controls button:hover { background: rgba(255,255,255,0.3); }
-        .controls .progress {
-            flex: 1; height: 4px; background: rgba(255,255,255,0.2);
-            border-radius: 2px; cursor: pointer; position: relative;
-        }
-        .controls .progress .bar { height: 100%; background: #e63946; border-radius: 2px; width: 0%; }
-        .controls .time { color: rgba(255,255,255,0.7); font-size: 13px; min-width: 90px; text-align: center; font-variant-numeric: tabular-nums; }
-        .top-bar {
-            position: fixed; top: 0; left: 0; right: 0;
-            padding: 12px 20px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, transparent 100%);
-            z-index: 10; display: flex; align-items: center;
-            opacity: 0; transition: opacity 0.3s; pointer-events: none;
-        }
-        video:hover ~ .top-bar, .top-bar:hover { opacity: 1; pointer-events: auto; }
-        .top-bar .logo { color: #fff; font-weight: 800; font-size: 14px; }
-        .top-bar .logo span { color: #e63946; }
-        .top-bar .info { margin-left: auto; color: rgba(255,255,255,0.7); font-size: 12px; text-align: right; }
-        .top-bar .info strong { color: #fff; display: block; font-size: 14px; }
-        .loading {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 5; text-align: center; color: rgba(255,255,255,0.6);
-        }
-        .loading .spinner {
-            width: 48px; height: 48px;
-            border: 3px solid rgba(255,255,255,0.1); border-top-color: #e63946;
-            border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading p { font-size: 14px; }
-        @media (max-width: 600px) {
-            .controls { padding: 14px 16px; gap: 10px; }
-            .controls button { width: 36px; height: 36px; font-size: 15px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>beIN MAX 1 (AR) - Live</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;overflow:hidden}
+video{width:100%;height:100%;object-fit:contain;background:#000}
+#overlay{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:#000;color:#fff;font-family:sans-serif;font-size:14px;transition:opacity .5s;cursor:pointer}
+#overlay.hidden{opacity:0;pointer-events:none}
+#overlay .spinner{width:48px;height:48px;border:3px solid rgba(255,255,255,.1);border-top-color:#e63946;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#overlay .btn{background:#e63946;border:none;color:#fff;padding:12px 32px;border-radius:6px;font-size:16px;cursor:pointer}
+#overlay .btn:hover{background:#c1121f}
+#overlay .err{color:#ff6b6b;font-size:13px;max-width:300px;text-align:center}
+.controls{position:fixed;bottom:0;left:0;right:0;padding:20px 24px;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,transparent 100%);z-index:5;display:flex;align-items:center;gap:16px;opacity:0;transition:opacity .3s;pointer-events:none}
+.vid:hover~.controls,.controls:hover{opacity:1;pointer-events:auto}
+.controls button{background:rgba(255,255,255,.15);border:none;color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:18px}
+.controls button:hover{background:rgba(255,255,255,.3)}
+.controls .bar-wrap{flex:1;height:4px;background:rgba(255,255,255,.2);border-radius:2px;cursor:pointer;position:relative}
+.controls .bar-wrap .fill{height:100%;background:#e63946;border-radius:2px;width:0%}
+.controls .time{color:rgba(255,255,255,.7);font-size:13px;min-width:90px;text-align:center;font-variant-numeric:tabular-nums}
+.top-bar{position:fixed;top:0;left:0;right:0;padding:12px 20px;background:linear-gradient(to bottom,rgba(0,0,0,.85) 0%,transparent 100%);z-index:5;display:flex;align-items:center;opacity:0;transition:opacity .3s;pointer-events:none}
+.vid:hover~.top-bar,.top-bar:hover{opacity:1;pointer-events:auto}
+.top-bar .logo{color:#fff;font-weight:800;font-size:14px}
+.top-bar .logo span{color:#e63946}
+.top-bar .info{margin-left:auto;color:rgba(255,255,255,.7);font-size:12px;text-align:right}
+.top-bar .info strong{color:#fff;display:block;font-size:14px}
+@media(max-width:600px){.controls{padding:14px 16px;gap:10px}.controls button{width:36px;height:36px;font-size:15px}}
+</style>
 </head>
 <body>
 
-<video id="video" playsinline autoplay></video>
+<video id="video" class="vid" playsinline muted></video>
 
 <div class="top-bar">
-    <div class="logo">Sport<span>24</span>Wire</div>
-    <div class="info"><strong>beIN MAX 1 (AR)</strong>World Cup - Portugal vs Spain</div>
+  <div class="logo">Sport<span>24</span>Wire</div>
+  <div class="info"><strong>beIN MAX 1 (AR)</strong>World Cup - Portugal vs Spain</div>
 </div>
 
 <div class="controls">
-    <button id="playBtn">▶</button>
-    <div class="progress"><div class="bar" id="progressBar"></div></div>
-    <span class="time" id="timeDisplay">0:00 / 0:00</span>
-    <button id="fsBtn">⛶</button>
+  <button id="playBtn">▶</button>
+  <div class="bar-wrap"><div class="fill" id="progressBar"></div></div>
+  <span class="time" id="timeDisplay">0:00 / 0:00</span>
+  <button id="fsBtn">⛶</button>
 </div>
 
-<div class="loading" id="loading">
-    <div class="spinner"></div>
-    <p>Loading stream...</p>
+<div id="overlay">
+  <div class="spinner" id="spinner"></div>
+  <div id="msg">Loading stream...</div>
+  <button class="btn" id="retryBtn" style="display:none">Retry</button>
+  <div class="err" id="errMsg"></div>
 </div>
 
 <script>
-const video = document.getElementById('video');
-const playBtn = document.getElementById('playBtn');
-const progressBar = document.getElementById('progressBar');
-const timeDisplay = document.getElementById('timeDisplay');
-const fsBtn = document.getElementById('fsBtn');
-const loading = document.getElementById('loading');
-const URL = 'https://2.simokora.com/my-hls/h9asfma10d5.m3u8';
-let hls = null;
+const video=document.getElementById('video');
+const overlay=document.getElementById('overlay');
+const spinner=document.getElementById('spinner');
+const msg=document.getElementById('msg');
+const retryBtn=document.getElementById('retryBtn');
+const errMsg=document.getElementById('errMsg');
+const playBtn=document.getElementById('playBtn');
+const progressBar=document.getElementById('progressBar');
+const timeDisplay=document.getElementById('timeDisplay');
+const fsBtn=document.getElementById('fsBtn');
+const URL='https://2.simokora.com/my-hls/h9asfma10d5.m3u8';
 
-if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = URL;
-    video.addEventListener('loadedmetadata', () => loading.style.display = 'none');
-} else if (Hls.isSupported()) {
-    hls = new Hls({ enableWorker: true });
+let hls=null;
+
+function showOverlay(text,isError=false){
+  overlay.classList.remove('hidden');
+  msg.textContent=text;
+  spinner.style.display=isError?'none':'block';
+  retryBtn.style.display=isError?'block':'none';
+  if(isError)errMsg.textContent='Check console for details (F12)';
+  else errMsg.textContent='';
+}
+
+function hideOverlay(){overlay.classList.add('hidden')}
+
+function togglePlay(){
+  if(video.paused){video.play().catch(()=>{})}
+  else{video.pause()}
+}
+
+function formatTime(t){
+  if(!t||isNaN(t))return'0:00';
+  return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
+}
+
+function initPlayer(){
+  showOverlay('Loading stream...');
+  
+  if(Hls.isSupported()){
+    hls=new Hls({enableWorker:false});
     hls.loadSource(URL);
     hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        loading.style.display = 'none';
-        video.play().catch(() => {});
+    hls.on(Hls.Events.MANIFEST_PARSED,()=>{
+      hideOverlay();
+      video.play().catch(()=>{
+        showOverlay('Tap to play');
+      });
     });
-    hls.on(Hls.Events.ERROR, (e, data) => {
-        if (data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+    hls.on(Hls.Events.ERROR,(e,data)=>{
+      if(data.fatal){
+        showOverlay('Stream error - retrying...',true);
+        if(data.type===Hls.ErrorTypes.NETWORK_ERROR){
+          setTimeout(()=>hls.startLoad(),2000);
+        }else{
+          setTimeout(()=>window.location.reload(),5000);
+        }
+      }
     });
-} else {
-    loading.innerHTML = '<p>HLS not supported</p>';
+  }else{
+    showOverlay('HLS not supported in this browser',true);
+  }
 }
 
-playBtn.addEventListener('click', () => {
-    if (video.paused) { video.play(); playBtn.textContent = '⏸'; }
-    else { video.pause(); playBtn.textContent = '▶'; }
+overlay.addEventListener('click',()=>{
+  if(!overlay.classList.contains('hidden')){
+    video.play().then(hideOverlay).catch(()=>{});
+  }
 });
-video.addEventListener('play', () => { playBtn.textContent = '⏸'; });
-video.addEventListener('pause', () => { playBtn.textContent = '▶'; });
-video.addEventListener('timeupdate', () => {
-    if (video.duration) {
-        progressBar.style.width = ((video.currentTime / video.duration) * 100) + '%';
-        timeDisplay.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
-    }
+
+playBtn.addEventListener('click',togglePlay);
+video.addEventListener('play',()=>{playBtn.textContent='⏸'});
+video.addEventListener('pause',()=>{playBtn.textContent='▶'});
+video.addEventListener('timeupdate',()=>{
+  if(video.duration){
+    progressBar.style.width=((video.currentTime/video.duration)*100)+'%';
+    timeDisplay.textContent=formatTime(video.currentTime)+' / '+formatTime(video.duration);
+  }
 });
-document.querySelector('.progress').addEventListener('click', (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    video.currentTime = ((e.clientX - rect.left) / rect.width) * video.duration;
+document.querySelector('.bar-wrap').addEventListener('click',(e)=>{
+  const r=e.currentTarget.getBoundingClientRect();
+  video.currentTime=((e.clientX-r.left)/r.width)*video.duration;
 });
-function formatTime(t) {
-    if (!t || isNaN(t)) return '0:00';
-    return Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
-}
-fsBtn.addEventListener('click', () => {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
-    else document.exitFullscreen();
+fsBtn.addEventListener('click',()=>{
+  if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen();
 });
+retryBtn.addEventListener('click',()=>window.location.reload());
+
+initPlayer();
 </script>
 </body>
 </html>
